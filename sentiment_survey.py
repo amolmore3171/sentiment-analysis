@@ -33,40 +33,33 @@ df_new['Answer_processed'] = df_new['Answer_processed'].apply(lambda j: ' '.join
 
 #corpus = df_new['Answer_processed'].to_list()
 
-#textblob
-Final = pd.DataFrame()   
-for i in range(0, df_new.shape[0]):
-    
-    blob = TextBlob(df_new.iloc[i,2])
-    
-    temp = pd.DataFrame({'Answer': df_new.iloc[i,3], 'Polarity': blob.sentiment.polarity}, index = [0])
-    Final = Final.append(temp)
 
 #vader
 FinalResults_Vader = pd.DataFrame()
 analyzer = SentimentIntensityAnalyzer()
 
-for i in range(0, df_new.shape[0]):
-    
-    snt = analyzer.polarity_scores(df_new.iloc[i,3])
-    
-    temp1 = pd.DataFrame({'Answers': df_new.iloc[i,2], 'Polarity': list(snt.items())[3][1]}, index = [0])
+df_new['scores'] = df_new['Answer'].apply(lambda ans: analyzer.polarity_scores(ans))
 
-    FinalResults_Vader = FinalResults_Vader.append(temp1)
+df_new['compound'] = df_new['scores'].apply(lambda score_dict: score_dict['compound'])
+df_new['positive'] = df_new['scores'].apply(lambda score_dict: score_dict['pos'])
+df_new['negative'] = df_new['scores'].apply(lambda score_dict: score_dict['neg'])
+df_new['neutral'] = df_new['scores'].apply(lambda score_dict: score_dict['neu'])
 
-
-df_new['Polarity'] = Final['Polarity'].values
+df_new['sentiment'] = df_new['compound'].apply(lambda c: 'positive' if c>=0 else 'negative')
 
 def plot(graph):
     graph.set_xticklabels(graph.get_xticklabels(),rotation=90,ha='right')
-    plt.show
+    graph.set_ylabel("Sentiment")
+    plt.show()
 
 
-loc_boxplot=sns.boxplot(x='Location',y='Polarity',data=df_new)
+loc_boxplot=sns.boxplot(x='Location',y='compound',data=df_new)
 plot(loc_boxplot)
 
-bu_boxplot=sns.boxplot(x='Business Unit',y='Polarity',data=df_new)
+bu_boxplot=sns.boxplot(x='Business Unit',y='compound',data=df_new)
 plot(bu_boxplot)
+
+
 
 
 
